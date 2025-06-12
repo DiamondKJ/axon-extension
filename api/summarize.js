@@ -37,6 +37,16 @@ export default async function handler(req, res) {
     console.log('Prompt length:', prompt.length);
     console.log('First 100 chars of prompt:', prompt.substring(0, 100));
 
+    // === Debugging: List available models ===
+    try {
+      const listModelsResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${process.env.GEMINI_API_KEY}`);
+      const availableModels = await listModelsResponse.json();
+      console.log('Available models from Google API:', JSON.stringify(availableModels, null, 2));
+    } catch (modelError) {
+      console.error('Error fetching available models:', modelError);
+    }
+    // ========================================
+
     const requestBody = {
       contents: [{
         parts: [{
