@@ -29,5 +29,14 @@
       ],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'",
+    "script-src": "'self'",
+    "object-src": "'self'",
+    "connect-src": "'self' https://axon-extension.netlify.app/",
+    "style-src": "'self' 'unsafe-inline'",
+    "img-src": "'self' data:",
+    "worker-src": "'self'"
+  }
 }
