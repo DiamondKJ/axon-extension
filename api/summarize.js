@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   console.log('Request body:', JSON.stringify(req.body, null, 2));
 
   try {
-    if (!process.env.GOOGLE_API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
       console.error('API key not configured');
       return res.status(500).json({ error: 'API key not configured on server' });
     }
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     console.log('Sending request to Gemini API with body:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${process.env.GOOGLE_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
