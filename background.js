@@ -16,8 +16,15 @@ async function callSummarizationAPI(prompt) {
             },
             body: JSON.stringify({
                 contents: [{
+                    role: "user",
                     parts: [{ text: prompt }]
-                }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 4000,
+                }
             })
         });
 

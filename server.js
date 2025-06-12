@@ -26,13 +26,22 @@ app.post('/api/summarize', async (req, res) => {
 
   try {
     console.log('Sending request to Google API');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const response = await axios.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', req.body, {
       headers: {
         'x-goog-api-key': GOOGLE_API_KEY,
         'Content-Type': 'application/json'
       }
     });
+    
     console.log('Received response from Google API');
+    console.log('Response data:', JSON.stringify(response.data, null, 2));
+    
+    if (!response.data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid response format from Google API');
+    }
+    
     res.json(response.data);
   } catch (error) {
     console.error('Error details:', {
@@ -40,9 +49,12 @@ app.post('/api/summarize', async (req, res) => {
       data: error.response?.data,
       message: error.message
     });
+    
+    // Send a more detailed error response
     res.status(error.response?.status || 500).json({ 
       error: 'Failed to summarize',
-      details: error.response?.data || error.message
+      details: error.response?.data || error.message,
+      status: error.response?.status || 500
     });
   }
 });
