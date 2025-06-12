@@ -23,12 +23,33 @@ exports.handler = async (event, context) => {
         };
     }
 
+    const contentType = event.headers['content-type'];
+    if (!contentType || !contentType.includes('application/json')) {
+        console.error("Invalid Content-Type header for error log:", contentType);
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'Invalid Content-Type, expected application/json for error log' })
+        };
+    }
+
     try {
         const errorData = JSON.parse(event.body);
+        
+        // Validate structure of errorData
+        if (!errorData || typeof errorData.context === 'undefined' || typeof errorData.message === 'undefined') {
+            console.error("Invalid error log payload structure:", errorData);
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ error: 'Invalid error log payload structure, missing context or message' })
+            };
+        }
+
         console.error("--- Extension Error Report ---");
         console.error("Context:", errorData.context);
         console.error("Message:", errorData.message);
-        console.error("Stack:", errorData.stack);
+        console.error("Stack:", errorData.stack || 'No stack provided'); // Stack is optional
         console.error("Timestamp:", new Date().toISOString());
         console.error("------------------------------");
 

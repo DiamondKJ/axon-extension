@@ -26,6 +26,16 @@ exports.handler = async (event, context) => {
         };
     }
 
+    const contentType = event.headers['content-type'];
+    if (!contentType || !contentType.includes('application/json')) {
+        console.error("Invalid Content-Type header:", contentType);
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'Invalid Content-Type, expected application/json' })
+        };
+    }
+
     if (!process.env.GEMINI_API_KEY) {
         console.error("GEMINI_API_KEY not configured");
         return {
