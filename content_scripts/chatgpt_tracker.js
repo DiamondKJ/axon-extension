@@ -17,6 +17,19 @@ let SELECTORS = null;
 let progressInterval = null;
 let messageObserver = null; // Holds the observer that watches for new messages
 
+// Debounce helper function
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+
+// Debounced version of processAllMessages
+const debouncedProcessAllMessages = debounce(processAllMessages, 300); // 300ms debounce
+
 // Helper to report errors to the background script
 function reportContentScriptError(error, context = "unknown") {
     console.error(`Axon AI C: Error in ${context}:`, error);
@@ -89,7 +102,7 @@ function startLookoutObserver() {
                         console.log("Axon AI C: Chat container found. Attaching message observer.");
                         chatContainer.dataset.axonWatching = 'true'; // Mark as watched
                         attachMessageObserver(chatContainer);
-                        void processAllMessages(); // Do an initial count, use void for async
+                        void debouncedProcessAllMessages(); // Initial count with debounce
                     }
                 } else {
                     // If the container disappears (like on Claude chat switch), disconnect the old message watcher
@@ -124,7 +137,7 @@ function attachMessageObserver(targetNode) {
 
         messageObserver = new MutationObserver(() => {
             try { // Catch errors inside the observer callback
-                void processAllMessages();
+                void debouncedProcessAllMessages(); // Use debounced version here
             } catch (error) {
                 reportContentScriptError(error, "attachMessageObserver.callback");
                 // Attempt to stop the message observer if its callback is failing repeatedly
