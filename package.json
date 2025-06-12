@@ -1,10 +1,7 @@
 {
-  "name": "axon-extension-server",
+  "name": "axon-extension",
   "version": "1.0.0",
-  "description": "Server for Axon AI Context Manager extension",
+  "description": "Axon AI Context Manager extension",
   "scripts": {},
-  "dependencies": {
-    "axios": "^1.6.2",
-    "cors": "^2.8.5"
-  }
+  "dependencies": {}
 } 
