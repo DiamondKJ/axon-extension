@@ -238,8 +238,15 @@ function handleSummarizeClick() {
             alert("Summarization Failed: " + response.message);
             handleFinish();
         } else if (response && response.status === 'success' && response.summary) {
-            showNotification("✓ Summary copied to clipboard!");
-            handleFinish("✓ Copied!");
+            navigator.clipboard.writeText(response.summary).then(() => {
+                console.log("Axon AI C: Summary successfully copied to clipboard.");
+                showNotification("✓ Summary copied to clipboard!");
+                handleFinish("✓ Copied!");
+            }).catch(err => {
+                console.error("Axon AI C: Failed to copy summary to clipboard:", err);
+                showNotification("✗ Failed to copy!");
+                handleFinish();
+            });
         } else { 
             alert("An unexpected response was received.");
             handleFinish();
