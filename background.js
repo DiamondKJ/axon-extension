@@ -4,6 +4,23 @@ console.log("Axon AI B: Script evaluation started.");
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// New function to report errors to the backend
+async function reportErrorToBackend(errorDetails) {
+    console.error("Axon AI B: Reporting error to backend:", errorDetails);
+    try {
+        await fetch('https://axon-extension.netlify.app/.netlify/functions/log_error', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(errorDetails)
+        });
+        console.log("Axon AI B: Error reported successfully.");
+    } catch (e) {
+        console.error("Axon AI B: Failed to report error to backend:", e);
+    }
+}
+
 async function callSummarizationAPI(prompt) {
     console.log("Axon AI B: Calling summarization API...");
     
@@ -145,8 +162,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
             } catch (error) {
                 console.error("Axon AI B: Critical summarization error:", error);
+                reportErrorToBackend({
+                    context: "callSummarizationAPI",
+                    message: error.message,
+                    stack: error.stack
+                });
                 sendResponse({ status: "error", message: error.message || "An unknown error occurred." });
             }
+        })();
+        return true;
+    } else if (request.action === "reportError") { // New error reporting action
+        (async () => {
+            reportErrorToBackend(request.errorDetails);
+            sendResponse({ status: "acknowledged" });
         })();
         return true;
     }
