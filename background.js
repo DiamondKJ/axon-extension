@@ -8,6 +8,7 @@ async function callSummarizationAPI(prompt) {
     console.log("Axon AI B: Calling summarization API...");
     
     try {
+        console.log("Axon AI B: Sending request to server...");
         const response = await fetch('https://axon-extension.vercel.app/api/summarize', {
             method: 'POST',
             headers: {
@@ -20,12 +21,22 @@ async function callSummarizationAPI(prompt) {
             })
         });
 
+        console.log("Axon AI B: Server response status:", response.status);
+        const responseText = await response.text();
+        console.log("Axon AI B: Server response:", responseText);
+
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to summarize');
+            let errorMessage;
+            try {
+                const errorData = JSON.parse(responseText);
+                errorMessage = errorData.error || errorData.details || 'Failed to summarize';
+            } catch (e) {
+                errorMessage = responseText || 'Failed to summarize';
+            }
+            throw new Error(errorMessage);
         }
 
-        const data = await response.json();
+        const data = JSON.parse(responseText);
         if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
             throw new Error("Received an empty response from the API.");
         }
