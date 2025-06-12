@@ -48,7 +48,7 @@ async function callSummarizationAPI(prompt) {
         console.log("Axon AI B: Request payload:", JSON.stringify(requestBody, null, 2));
         console.log("Axon AI B: Sending request to server...");
         
-        const response = await fetch('https://axon-extension.onrender.com/api/summarize', {
+        const response = await fetch('https://YOUR_NETLIFY_SITE_NAME.netlify.app/.netlify/functions/summarize', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
