@@ -1,3 +1,5 @@
+// api/summarize.js
+// This is a dummy comment to force a new Vercel deployment.
 export default async function handler(req, res) {
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
