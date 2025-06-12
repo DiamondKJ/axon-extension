@@ -26,8 +26,6 @@
       "css": ["content_scripts/styles.css"],
       "js": [
         "lib/gpt-tokenizer.js",
-        "lib/genai.js",
-        "lib/anthropic.js",
         "content_scripts/chatgpt_tracker.js"
       ],
       "run_at": "document_idle"
