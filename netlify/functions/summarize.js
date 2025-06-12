@@ -1,6 +1,6 @@
-import fetch from 'node-fetch';
+const fetch = require('node-fetch');
 
-export async function handler(event, context) {
+exports.handler = async (event, context) => {
     // Allow CORS for all origins, and for preflight OPTIONS requests
     const headers = {
         'Access-Control-Allow-Origin': '*',
