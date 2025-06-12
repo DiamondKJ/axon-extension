@@ -1,30 +1,40 @@
 // background.js - FINAL with Summary Length Constraint
 
-// Import the official Google GenAI library
-import { GoogleGenerativeAI } from './lib/genai.js'; 
-
 console.log("Axon AI B: Script evaluation started.");
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function callGoogleAPI(apiKey, prompt) {
-    console.log("Axon AI B: Calling Google AI SDK with streaming...");
+async function callSummarizationAPI(apiKey, prompt) {
+    console.log("Axon AI B: Calling summarization API...");
     
     try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
-        const result = await model.generateContentStream(prompt);
+        const response = await fetch('https://axon-extension.vercel.app/api/summarize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: prompt }]
+                }]
+            })
+        });
 
-        let fullText = "";
-        for await (const chunk of result.stream) {
-            fullText += chunk.text();
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to summarize');
         }
-        
-        if (!fullText) throw new Error("Received an empty response from Google AI API.");
-        return fullText;
+
+        const data = await response.json();
+        if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+            throw new Error("Received an empty response from the API.");
+        }
+
+        return data.candidates[0].content.parts[0].text;
 
     } catch (e) {
-        console.error("Axon AI B: Error during SDK call:", e.message);
+        console.error("Axon AI B: Error during API call:", e.message);
         if (e.message.includes("API key not valid")) {
              throw new Error("Your Google AI API key is not valid. Please check it in the options.");
         }
@@ -50,7 +60,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 
                 if(tabId) chrome.tabs.sendMessage(tabId, { action: "summarizationProgress", currentChunk: 1, totalChunks: 1 });
                 
-                const finalSummary = await callGoogleAPI(apiKey, fullPrompt);
+                const finalSummary = await callSummarizationAPI(apiKey, fullPrompt);
                 
                 sendResponse({ status: "success", summary: finalSummary });
 
