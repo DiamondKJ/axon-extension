@@ -16,8 +16,6 @@ let currentPlatform = null;
 let SELECTORS = null;
 let progressInterval = null;
 let messageObserver = null; // Holds the observer that watches for new messages
-let apiKey = null;
-let anthropicApiKey = null;
 
 // --- Platform Configuration ---
 const MODEL_INFO = {
@@ -39,14 +37,6 @@ async function init() {
     console.log(`Axon AI C: Initializing for ${currentPlatform}.`);
 
     CONTEXT_LIMIT = MODEL_INFO[currentPlatform]['Default'].limit;
-
-    // Get API keys
-    const settings = await chrome.storage.local.get(['axonGoogleApiKey', 'axonAnthropicApiKey']);
-    if (currentPlatform === "Gemini") {
-        apiKey = settings.axonGoogleApiKey;
-    } else if (currentPlatform === "Claude") {
-        anthropicApiKey = settings.axonAnthropicApiKey;
-    }
 
     injectAnimationStyles();
     setupTokenDisplayUI();
@@ -220,48 +210,40 @@ function handleSummarizeClick() {
         }
     }, 500);
 
-    chrome.storage.local.get(['axonGoogleApiKey'], (items) => {
-        if (!items.axonGoogleApiKey) {
-            alert("Google AI API Key not set. Please set it in the options.");
-            resetSummarizeButton();
-            return;
+    const conversationText = getConversationAsTextForSummary();
+    console.log(`Axon AI C: Sending 'summarizeText' to background...`);
+
+    chrome.runtime.sendMessage({ action: "summarizeText", textToSummarize: conversationText }, 
+    (response) => { 
+        clearInterval(progressInterval);
+
+        const handleFinish = (successMessage = null) => {
+            if (successMessage) {
+                if (uiCircleContainer) uiCircleContainer.style.setProperty('--progress-percent', `100%`);
+                setTimeout(() => {
+                    resetSummarizeButton(successMessage);
+                    setTimeout(() => resetSummarizeButton("Summarize"), 2000);
+                }, 1000);
+            } else {
+                resetSummarizeButton();
+            }
+        };
+        
+        if (chrome.runtime.lastError) {
+            alert("Error: " + chrome.runtime.lastError.message);
+            handleFinish();
+            return; 
         }
-
-        const conversationText = getConversationAsTextForSummary();
-        console.log(`Axon AI C: Sending 'summarizeText' to background...`);
-
-        chrome.runtime.sendMessage({ action: "summarizeText", textToSummarize: conversationText }, 
-        (response) => { 
-            clearInterval(progressInterval);
-
-            const handleFinish = (successMessage = null) => {
-                if (successMessage) {
-                    if (uiCircleContainer) uiCircleContainer.style.setProperty('--progress-percent', `100%`);
-                    setTimeout(() => {
-                        resetSummarizeButton(successMessage);
-                        setTimeout(() => resetSummarizeButton("Summarize"), 2000);
-                    }, 1000);
-                } else {
-                    resetSummarizeButton();
-                }
-            };
-            
-            if (chrome.runtime.lastError) {
-                alert("Error: " + chrome.runtime.lastError.message);
-                handleFinish();
-                return; 
-            }
-            if (response && response.status === 'error') { 
-                alert("Summarization Failed: " + response.message);
-                handleFinish();
-            } else if (response && response.status === 'success' && response.summary) {
-                showNotification("✓ Summary copied to clipboard!");
-                handleFinish("✓ Copied!");
-            } else { 
-                alert("An unexpected response was received.");
-                handleFinish();
-            }
-        });
+        if (response && response.status === 'error') { 
+            alert("Summarization Failed: " + response.message);
+            handleFinish();
+        } else if (response && response.status === 'success' && response.summary) {
+            showNotification("✓ Summary copied to clipboard!");
+            handleFinish("✓ Copied!");
+        } else { 
+            alert("An unexpected response was received.");
+            handleFinish();
+        }
     });
 }
 
