@@ -106,3 +106,33 @@
         box-shadow: 0 0 0 0 rgba(0, 82, 155, 0);
     }
 }
+
+/* Styles moved from injectAnimationStyles in chatgpt_tracker.js for stricter CSP */
+#axon-ui-circle-container.axon-processing {
+    background-image: conic-gradient(#007bff 0% var(--progress-percent, 0%), #ffffff var(--progress-percent, 0%) 100%);
+    transition: background-image 0.25s ease-out;
+}
+#axon-ui-circle-container.axon-processing > span { color: #003E74; }
+
+#axon-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease-out;
+    pointer-events: none;
+}
+
+#axon-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}

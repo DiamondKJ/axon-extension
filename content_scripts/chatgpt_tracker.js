@@ -159,41 +159,12 @@ function attachMessageObserver(targetNode) {
 function injectAnimationStyles() {
     try {
         const styleId = 'axon-animation-styles';
-        if (document.getElementById(styleId)) return;
+        if (document.getElementById(styleId)) return; // Styles are now loaded via styles.css
 
-        const style = document.createElement('style');
-        style.id = styleId;
-        style.textContent = `
-        #axon-ui-circle-container.axon-processing {
-            background-image: conic-gradient(#007bff 0% var(--progress-percent, 0%), #ffffff var(--progress-percent, 0%) 100%);
-            transition: background-image 0.25s ease-out;
-        }
-        #axon-ui-circle-container.axon-processing > span { color: #003E74; }
+        // The dynamic style injection code has been moved to content_scripts/styles.css
+        // This function now primarily acts as a check if needed, or can be simplified further.
+        // If there were other non-CSS related side effects here, they would remain.
 
-        #axon-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 10000;
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: all 0.3s ease-out;
-            pointer-events: none;
-        }
-
-        #axon-notification.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    `;
-        document.head.appendChild(style);
     } catch (error) {
         reportContentScriptError(error, "injectAnimationStyles");
     }

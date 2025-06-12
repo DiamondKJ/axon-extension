@@ -35,7 +35,7 @@
     "script-src": "'self'",
     "object-src": "'self'",
     "connect-src": "'self' https://axon-extension.netlify.app/",
-    "style-src": "'self' 'unsafe-inline'",
+    "style-src": "'self'",
     "img-src": "'self' data:",
     "worker-src": "'self'"
   }
