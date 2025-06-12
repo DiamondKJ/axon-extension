@@ -2,35 +2,32 @@
 // This is a dummy comment to force a new Vercel deployment.
 export default async function handler(req, res) {
   // Add CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight request
+  // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
+  console.log('Summarize API called');
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  console.log('Received summarization request');
-  console.log('Request body:', JSON.stringify(req.body, null, 2));
-
   try {
+    const { prompt } = req.body; // Assuming prompt is sent directly in body
+    
     if (!process.env.GEMINI_API_KEY) {
-      console.error('API key not configured');
-      return res.status(500).json({ error: 'API key not configured on server' });
+      console.log('GEMINI_API_KEY not found in environment');
+      return res.status(500).json({ 
+        error: 'API key not configured' 
+      });
     }
 
-    const { prompt } = req.body;
-    
     if (!prompt || !prompt.trim()) {
       console.error('Empty prompt received');
       return res.status(400).json({ error: 'Empty prompt received' });
@@ -38,16 +35,7 @@ export default async function handler(req, res) {
 
     console.log('Prompt length:', prompt.length);
     console.log('First 100 chars of prompt:', prompt.substring(0, 100));
-
-    // === Debugging: List available models ===
-    try {
-      const listModelsResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${process.env.GEMINI_API_KEY}`);
-      const availableModels = await listModelsResponse.json();
-      console.log('Available models from Google API:', JSON.stringify(availableModels, null, 2));
-    } catch (modelError) {
-      console.error('Error fetching available models:', modelError);
-    }
-    // ========================================
+    console.log('Making request to Gemini API...');
 
     const requestBody = {
       contents: [{
@@ -62,47 +50,28 @@ export default async function handler(req, res) {
         maxOutputTokens: 4000,
       },
       safetySettings: [
-        {
-          category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_HATE_SPEECH",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        }
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
       ]
     };
-
-    console.log('Sending request to Gemini API with body:', JSON.stringify(requestBody, null, 2));
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      }
-    );
+    
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
 
     const data = await response.json();
-    console.log('Received response from Google API');
-    console.log('Response data:', JSON.stringify(data, null, 2));
-
+    
     if (!response.ok) {
-      console.error('Error from Google API:', data);
-      return res.status(response.status).json({
-        error: 'Failed to summarize',
-        details: data
+      console.log('Gemini API error:', data);
+      return res.status(response.status).json({ 
+        error: 'Failed to summarize', 
+        details: data 
       });
     }
 
@@ -118,13 +87,13 @@ export default async function handler(req, res) {
     console.log('Generated summary length:', summary.length);
     console.log('First 100 chars of summary:', summary.substring(0, 100));
 
-    res.status(200).json(data);
+    console.log('Gemini API success');
+    res.status(200).json({ summary: summary }); // Send only the summary text back
   } catch (error) {
-    console.error('Error in /api/summarize:', error);
-    console.error('Error details:', error.response?.data || error.message);
-    res.status(500).json({
-      error: 'Failed to summarize',
-      details: error.response?.data || { error: error.message }
+    console.log('Server error:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to summarize', 
+      details: error.message 
     });
   }
 } 
