@@ -9,7 +9,7 @@ async function callSummarizationAPI(prompt) {
     
     try {
         console.log("Axon AI B: Sending request to server...");
-        const response = await fetch('https://axon-extension-gdvk4pcc6-kaustubh-joshis-projects-2a0d2698.vercel.app/api/summarize', {
+        const response = await fetch('https://axon-extension.vercel.app/api/summarize', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
