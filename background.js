@@ -8,41 +8,52 @@ async function callSummarizationAPI(prompt) {
     console.log("Axon AI B: Calling summarization API...");
     
     try {
+        if (!prompt || prompt.trim().length === 0) {
+            throw new Error("Generated prompt is empty");
+        }
+
+        console.log("Axon AI B: Prompt length:", prompt.length);
+        console.log("Axon AI B: First 100 chars of prompt:", prompt.substring(0, 100));
+
+        const requestBody = {
+            contents: [{
+                parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 4000,
+            },
+            safetySettings: [
+                {
+                    category: "HARM_CATEGORY_HARASSMENT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_HATE_SPEECH",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                }
+            ]
+        };
+
+        console.log("Axon AI B: Request payload:", JSON.stringify(requestBody, null, 2));
         console.log("Axon AI B: Sending request to server...");
+        
         const response = await fetch('https://axon-extension.vercel.app/api/summarize', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 4000,
-                },
-                safetySettings: [
-                    {
-                        category: "HARM_CATEGORY_HARASSMENT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        category: "HARM_CATEGORY_HATE_SPEECH",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    }
-                ]
-            })
+            body: JSON.stringify({ prompt })
         });
 
         console.log("Axon AI B: Server response status:", response.status);
@@ -53,7 +64,7 @@ async function callSummarizationAPI(prompt) {
             let errorMessage;
             try {
                 const errorData = JSON.parse(responseText);
-                errorMessage = errorData.error || errorData.details || 'Failed to summarize';
+                errorMessage = errorData.error || errorData.details?.error || 'Failed to summarize';
             } catch (e) {
                 errorMessage = responseText || 'Failed to summarize';
             }
@@ -62,10 +73,15 @@ async function callSummarizationAPI(prompt) {
 
         const data = JSON.parse(responseText);
         if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+            console.error("Axon AI B: Invalid response format:", data);
             throw new Error("Received an empty response from the API.");
         }
 
-        return data.candidates[0].content.parts[0].text;
+        const summary = data.candidates[0].content.parts[0].text;
+        console.log("Axon AI B: Generated summary length:", summary.length);
+        console.log("Axon AI B: First 100 chars of summary:", summary.substring(0, 100));
+
+        return summary;
 
     } catch (e) {
         console.error("Axon AI B: Error during API call:", e.message);
