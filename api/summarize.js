@@ -1,5 +1,4 @@
 // api/summarize.js
-// This is a dummy comment to force a new Vercel deployment.
 export default async function handler(req, res) {
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,7 +18,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { prompt } = req.body; // Assuming prompt is sent directly in body
+    // Your extension sends the full Gemini API format
+    const { contents, generationConfig, safetySettings } = req.body;
     
     if (!process.env.GEMINI_API_KEY) {
       console.log('GEMINI_API_KEY not found in environment');
@@ -28,33 +28,20 @@ export default async function handler(req, res) {
       });
     }
 
-    if (!prompt || !prompt.trim()) {
-      console.error('Empty prompt received');
-      return res.status(400).json({ error: 'Empty prompt received' });
+    if (!contents || !contents[0]?.parts?.[0]?.text) {
+      console.error('Empty or invalid contents received');
+      return res.status(400).json({ error: 'Empty or invalid contents received' });
     }
 
+    const prompt = contents[0].parts[0].text;
     console.log('Prompt length:', prompt.length);
     console.log('First 100 chars of prompt:', prompt.substring(0, 100));
     console.log('Making request to Gemini API...');
 
     const requestBody = {
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 4000,
-      },
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
-      ]
+      contents,
+      generationConfig,
+      safetySettings
     };
     
     const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${process.env.GEMINI_API_KEY}`, {
@@ -83,12 +70,9 @@ export default async function handler(req, res) {
       });
     }
 
-    const summary = data.candidates[0].content.parts[0].text;
-    console.log('Generated summary length:', summary.length);
-    console.log('First 100 chars of summary:', summary.substring(0, 100));
-
     console.log('Gemini API success');
-    res.status(200).json({ summary: summary }); // Send only the summary text back
+    // Return the full response format that your extension expects
+    res.status(200).json(data);
   } catch (error) {
     console.log('Server error:', error.message);
     res.status(500).json({ 
@@ -96,4 +80,4 @@ export default async function handler(req, res) {
       details: error.message 
     });
   }
-} 
+}
