@@ -142,27 +142,7 @@ function injectAnimationStyles() {
 }
 
 async function countTokens(text) {
-    if (currentPlatform === "Gemini" && apiKey) {
-        try {
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
-            const result = await model.countTokens({ contents: [{ parts: [{ text }] }] });
-            return result.totalTokens;
-        } catch (e) {
-            console.error("Error using Gemini tokenizer:", e);
-            return Math.ceil(text.length / 4); // Fallback to estimate
-        }
-    } else if (currentPlatform === "Claude" && anthropicApiKey) {
-        try {
-            const anthropic = new Anthropic(anthropicApiKey);
-            return await anthropic.countTokens(text);
-        } catch (e) {
-            console.error("Error using Claude tokenizer:", e);
-            return Math.ceil(text.length / 4); // Fallback to estimate
-        }
-    }
-    
-    // Use GPT tokenizer for other platforms
+    // Use GPT tokenizer for all platforms
     if (typeof GPTTokenizer_cl100k_base !== 'undefined') {
         try {
             return GPTTokenizer_cl100k_base.encode(text).length;

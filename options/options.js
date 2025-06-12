@@ -2,36 +2,30 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const googleKeyInput = document.getElementById('googleApiKey');
-    const anthropicKeyInput = document.getElementById('anthropicApiKey');
     const saveButton = document.getElementById('saveButton');
     const statusDiv = document.getElementById('status');
 
-    // Load the saved keys when the page opens
-    chrome.storage.local.get(['axonGoogleApiKey', 'axonAnthropicApiKey'], (items) => {
+    // Load the saved key when the page opens
+    chrome.storage.local.get(['axonGoogleApiKey'], (items) => {
         if (chrome.runtime.lastError) {
-            console.error("Error loading keys:", chrome.runtime.lastError.message);
+            console.error("Error loading key:", chrome.runtime.lastError.message);
             return;
         }
         if (items.axonGoogleApiKey) {
             googleKeyInput.value = items.axonGoogleApiKey;
         }
-        if (items.axonAnthropicApiKey) {
-            anthropicKeyInput.value = items.axonAnthropicApiKey;
-        }
     });
 
     // --- SAVE BUTTON LOGIC (INSTANT) ---
-    // This function's only job is to save the keys to storage. No API calls.
+    // This function's only job is to save the key to storage. No API calls.
     saveButton.addEventListener('click', () => {
         const googleKey = googleKeyInput.value.trim();
-        const anthropicKey = anthropicKeyInput.value.trim();
         
         // Disable button briefly to provide feedback
         saveButton.disabled = true;
 
         chrome.storage.local.set({
-            axonGoogleApiKey: googleKey,
-            axonAnthropicApiKey: anthropicKey
+            axonGoogleApiKey: googleKey
         }, () => {
             if (chrome.runtime.lastError) {
                 statusDiv.textContent = 'Error: Could not save settings.';
