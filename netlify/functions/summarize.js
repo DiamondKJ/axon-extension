@@ -1,7 +1,6 @@
-// Adding a blank line to force a new deployment
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
-exports.handler = async (event, context) => {
+export async function handler(event, context) {
     // Allow CORS for all origins, and for preflight OPTIONS requests
     const headers = {
         'Access-Control-Allow-Origin': '*',
