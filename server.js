@@ -22,10 +22,9 @@ app.post('/api/summarize', async (req, res) => {
   }
 
   try {
-    const response = await axios.post('https://api.anthropic.com/v1/messages', req.body, {
+    const response = await axios.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', req.body, {
       headers: {
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
+        'x-goog-api-key': API_KEY,
         'Content-Type': 'application/json'
       }
     });
