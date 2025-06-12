@@ -4,15 +4,13 @@
   "version": "1.0.0",
   "description": "Summarize long AI conversations with one click using Google Gemini.",
   "permissions": [
-    "storage",
     "clipboardWrite"
   ],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://gemini.google.com/*",
     "https://claude.ai/*",
-    "https://generativelanguage.googleapis.com/*",
-    "https://axon-extension.vercel.app/*"
+    "https://axon-extension.netlify.app/*"
   ],
   "background": {
     "service_worker": "background.js"
