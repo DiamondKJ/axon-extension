@@ -39,19 +39,13 @@ app.post('/api/summarize', async (req, res) => {
     
     // Now make the actual request
     const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent?key=${GOOGLE_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GOOGLE_API_KEY}`,
       {
         contents: [{
           parts: [{
             text: req.body.prompt
           }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        }
+        }]
       },
       {
         headers: {
