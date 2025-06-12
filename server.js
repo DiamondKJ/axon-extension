@@ -28,6 +28,16 @@ app.post('/api/summarize', async (req, res) => {
     console.log('Sending request to Google API');
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
+    // First, let's check available models
+    const modelsResponse = await axios.get('https://generativelanguage.googleapis.com/v1beta/models', {
+      headers: {
+        'x-goog-api-key': GOOGLE_API_KEY
+      }
+    });
+    
+    console.log('Available models:', JSON.stringify(modelsResponse.data, null, 2));
+    
+    // Now make the actual request
     const response = await axios.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', req.body, {
       headers: {
         'x-goog-api-key': GOOGLE_API_KEY,
