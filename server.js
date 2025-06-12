@@ -1,3 +1,4 @@
+// Adding a blank line to force a new deployment
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
@@ -17,17 +18,9 @@ const corsOptions = {
 // Apply CORS middleware with options
 app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
-
 app.use(express.json());
 
 app.post('/api/summarize', async (req, res) => {
-    // Set CORS headers for this specific route
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
     if (!process.env.GEMINI_API_KEY) {
         return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
     }
