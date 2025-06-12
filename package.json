@@ -1,0 +1,13 @@
+{
+  "name": "axon-extension",
+  "version": "1.0.0",
+  "description": "Axon AI Context Manager - Browser Extension",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.0",
+    "terser": "^5.29.2",
+    "fs-extra": "^11.2.0"
+  }
+} 

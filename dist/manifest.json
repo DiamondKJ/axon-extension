@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Axon AI Context Manager",
+  "version": "1.0.0",
+  "description": "Summarize long AI conversations with one click using Google Gemini.",
+  "permissions": [
+    "storage",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://gemini.google.com/*",
+    "https://claude.ai/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://gemini.google.com/*",
+        "https://claude.ai/*"
+      ],
+      "css": ["content_scripts/styles.css"],
+      "js": [
+        "lib/gpt-tokenizer.js",
+        "lib/genai.js",
+        "lib/anthropic.js",
+        "content_scripts/chatgpt_tracker.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options/options.html"
+}
