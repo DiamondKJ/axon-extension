@@ -28,7 +28,7 @@ app.post('/api/summarize', async (req, res) => {
     console.log('Sending request to Google API');
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
-    const response = await axios.post('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent', req.body, {
+    const response = await axios.post('https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent', req.body, {
       headers: {
         'x-goog-api-key': GOOGLE_API_KEY,
         'Content-Type': 'application/json'

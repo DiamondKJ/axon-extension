@@ -16,7 +16,6 @@ async function callSummarizationAPI(prompt) {
             },
             body: JSON.stringify({
                 contents: [{
-                    role: "user",
                     parts: [{ text: prompt }]
                 }],
                 generationConfig: {
@@ -24,7 +23,25 @@ async function callSummarizationAPI(prompt) {
                     topK: 40,
                     topP: 0.95,
                     maxOutputTokens: 4000,
-                }
+                },
+                safetySettings: [
+                    {
+                        category: "HARM_CATEGORY_HARASSMENT",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_HATE_SPEECH",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                    }
+                ]
             })
         });
 
