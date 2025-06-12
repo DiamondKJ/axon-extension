@@ -45,7 +45,13 @@ app.post('/api/summarize', async (req, res) => {
           parts: [{
             text: req.body.prompt
           }]
-        }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        }
       },
       {
         headers: {
@@ -55,11 +61,12 @@ app.post('/api/summarize', async (req, res) => {
     );
     
     console.log('Received response from Google API');
-    console.log('Response data:', JSON.stringify(response.data, null, 2));
     
-    if (!response.data.candidates?.[0]?.content?.parts?.[0]?.text) {
+    if (!response.data || !response.data.candidates || !response.data.candidates[0]) {
       throw new Error('Invalid response format from Google API');
     }
+
+    const summary = response.data.candidates[0].content.parts[0].text;
     
     res.json(response.data);
   } catch (error) {
