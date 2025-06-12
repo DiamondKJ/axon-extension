@@ -85,7 +85,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const systemPrompt = `You are a precision-focused summarization engine. Your task is to meticulously analyze the following conversation and produce a single, comprehensive, and well-organized summary. Extract all key decisions, action items, critical data points, important questions, and definitive conclusions. Synthesize this information into a coherent narrative. The final output should be a clean, easy-to-read summary that captures the essence of the entire conversation. CRITICAL INSTRUCTION: The final summary must be under 4000 characters in total length.`;
                 const fullPrompt = `${systemPrompt}\n\n---\n\nCONVERSATION TEXT:\n\n${textToSummarize}`;
                 
-                if(tabId) chrome.tabs.sendMessage(tabId, { action: "summarizationProgress", currentChunk: 1, totalChunks: 1 });
+                if(tabId) {
+                    try {
+                        await chrome.tabs.sendMessage(tabId, { action: "summarizationProgress", currentChunk: 1, totalChunks: 1 });
+                    } catch (e) {
+                        console.log("Axon AI B: Could not send progress update to tab, continuing anyway");
+                    }
+                }
                 
                 const finalSummary = await callSummarizationAPI(fullPrompt);
                 
