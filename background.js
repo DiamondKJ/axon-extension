@@ -4,15 +4,14 @@ console.log("Axon AI B: Script evaluation started.");
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function callSummarizationAPI(apiKey, prompt) {
+async function callSummarizationAPI(prompt) {
     console.log("Axon AI B: Calling summarization API...");
     
     try {
         const response = await fetch('https://axon-extension.vercel.app/api/summarize', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': apiKey
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 contents: [{
@@ -35,9 +34,6 @@ async function callSummarizationAPI(apiKey, prompt) {
 
     } catch (e) {
         console.error("Axon AI B: Error during API call:", e.message);
-        if (e.message.includes("API key not valid")) {
-             throw new Error("Your Google AI API key is not valid. Please check it in the options.");
-        }
         throw new Error(e.message);
     }
 }
@@ -48,10 +44,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const tabId = sender.tab?.id;
             try {
                 const { textToSummarize } = request;
-                const settings = await chrome.storage.local.get(['axonGoogleApiKey']);
-                const apiKey = settings.axonGoogleApiKey;
-
-                if (!apiKey) throw new Error("Google AI API Key not set. Please set it in the options.");
                 if (!textToSummarize || !textToSummarize.trim()) throw new Error("There is no text to summarize.");
 
                 // --- PROMPT WITH THE LENGTH CONSTRAINT ---
@@ -60,7 +52,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 
                 if(tabId) chrome.tabs.sendMessage(tabId, { action: "summarizationProgress", currentChunk: 1, totalChunks: 1 });
                 
-                const finalSummary = await callSummarizationAPI(apiKey, fullPrompt);
+                const finalSummary = await callSummarizationAPI(fullPrompt);
                 
                 sendResponse({ status: "success", summary: finalSummary });
 

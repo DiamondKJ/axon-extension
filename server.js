@@ -3,6 +3,9 @@ const axios = require('axios');
 const cors = require('cors');
 const app = express();
 
+// Get API key from environment variable
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -14,16 +17,14 @@ app.get('/', (req, res) => {
 
 // Proxy endpoint for summarization
 app.post('/api/summarize', async (req, res) => {
-  const apiKey = req.headers['x-goog-api-key'];
-  
-  if (!apiKey) {
-    return res.status(401).json({ error: 'Google API key not provided' });
+  if (!GOOGLE_API_KEY) {
+    return res.status(500).json({ error: 'API key not configured on server' });
   }
 
   try {
     const response = await axios.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', req.body, {
       headers: {
-        'x-goog-api-key': apiKey,
+        'x-goog-api-key': GOOGLE_API_KEY,
         'Content-Type': 'application/json'
       }
     });
