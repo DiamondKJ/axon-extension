@@ -8,7 +8,12 @@ module.exports = {
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: '[name].min.js'
+        filename: (pathData) => {
+            // Output background.min.js to root and chatgpt_tracker.min.js to content_scripts
+            return pathData.chunk.name === 'background' 
+                ? '[name].min.js'
+                : 'content_scripts/[name].min.js';
+        }
     },
     module: {
         rules: [

@@ -32,6 +32,8 @@ async function callSummarizationAPI(prompt) {
         // Define the system prompt for comprehensive context transfer
         const systemPrompt = `You are a highly skilled technical summarization AI. Your task is to create a comprehensive summary that captures ALL essential context for transferring to a new AI conversation. The summary must be structured to allow a new AI to immediately understand the full context and continue the conversation seamlessly.
 
+IMPORTANT: Provide a direct summary of the conversation. DO NOT provide feedback, suggestions, or "Even Better If" analysis. Focus on extracting and organizing the key information from the conversation.
+
 Please analyze the conversation and create a structured summary with the following sections:
 
 1. PROJECT OVERVIEW
