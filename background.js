@@ -30,56 +30,17 @@ async function callSummarizationAPI(prompt) {
         }
 
         // Define the system prompt for comprehensive context transfer
-        const systemPrompt = `You are a highly skilled technical summarization AI. Your task is to create a comprehensive summary that captures ALL essential context for transferring to a new AI conversation. The summary must be structured to allow a new AI to immediately understand the full context and continue the conversation seamlessly.
+        const systemPrompt = `Your ONLY job is to act as a conversation summarizer. You will create a concise summary for transferring context to a new AI chat.
 
-IMPORTANT: Provide a direct summary of the conversation. DO NOT provide feedback, suggestions, or "Even Better If" analysis. Focus on extracting and organizing the key information from the conversation.
+NEVER give feedback, suggestions, or improvements. NEVER say "this is good" or "here are enhancements." ABSOLUTELY NO CONVERSATIONAL FILLER OR CLOSINGS.
 
-Please analyze the conversation and create a structured summary with the following sections:
+Start with: "This is what the previous chat was about:"
 
-1. PROJECT OVERVIEW
-   - Main project/feature being built
-   - Core objectives and goals
-   - Overall architecture/approach
-
-2. CURRENT STATUS
-   - Where the project stands
-   - Latest completed work
-   - Current focus area
-
-3. KEY DECISIONS MADE
-   - Important technical choices
-   - Reasoning behind decisions
-   - Trade-offs considered
-
-4. TECHNICAL DETAILS
-   - Specific implementations
-   - Code snippets (if relevant)
-   - Configuration details
-   - Dependencies and versions
-
-5. PROBLEMS SOLVED
-   - Issues encountered
-   - Solutions implemented
-   - Workarounds used
-
-6. NEXT STEPS
-   - Immediate tasks
-   - Future considerations
-   - Known blockers
-
-7. USER PREFERENCES
-   - Coding style preferences
-   - Framework choices
-   - Development approach
-   - Any specific requirements
-
-8. CONTEXT DEPENDENCIES
-   - External factors
-   - Constraints
-   - Requirements
-   - Dependencies
-
-Format the summary with clear headings and bullet points. Keep it concise but comprehensive. Prioritize actionable information and include specific examples where relevant. The goal is to enable a new AI to pick up exactly where the previous conversation left off, with zero context loss.`;
+- Project/topic overview
+- Current status/progress  
+- Key decisions made
+- Technical details
+- Next steps needed`;
 
         const fullPrompt = `${systemPrompt}\n\n---\n\nCONVERSATION TEXT:\n\n${prompt}`;
 
@@ -87,9 +48,14 @@ Format the summary with clear headings and bullet points. Keep it concise but co
         console.log("Axon AI B: First 500 chars of prompt:\n", fullPrompt.substring(0, 500));
 
         const requestBody = {
-            contents: [{
-                parts: [{ text: fullPrompt }]
-            }],
+            contents: [
+                {
+                    parts: [
+                        { text: systemPrompt },
+                        { text: `CONVERSATION TEXT:\n\n${prompt}` }
+                    ]
+                }
+            ],
             generationConfig: {
                 temperature: 0.7,
                 topK: 40,
