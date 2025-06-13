@@ -29,30 +29,19 @@ async function callSummarizationAPI(prompt) {
             throw new Error("Generated prompt is empty");
         }
 
-        // Define the system prompt for comprehensive context transfer
-        const systemPrompt = `Your ONLY job is to act as a conversation summarizer. You will create a concise summary for transferring context to a new AI chat.
+        // Define the system prompt for comprehensive context transfer - now concatenated
+        const systemPromptContent = `You are a conversation summarizer. Your ONLY job is to create a concise summary for transferring context to a new AI chat.\n\nNEVER give feedback, suggestions, or improvements. NEVER say "this is good" or "here are enhancements." ABSOLUTELY NO CONVERSATIONAL FILLER OR CLOSINGS.\n\nStart with: "This is what the previous chat was about:"\n\n- Project/topic overview\n- Current status/progress  \n- Key decisions made\n- Technical details\n- Next steps needed\n\n---\n\nCONVERSATION TEXT:\n\n`;
 
-NEVER give feedback, suggestions, or improvements. NEVER say "this is good" or "here are enhancements." ABSOLUTELY NO CONVERSATIONAL FILLER OR CLOSINGS.
+        const fullConcatenatedPrompt = `${systemPromptContent}${prompt}`;
 
-Start with: "This is what the previous chat was about:"
-
-- Project/topic overview
-- Current status/progress  
-- Key decisions made
-- Technical details
-- Next steps needed`;
-
-        const fullPrompt = `${systemPrompt}\n\n---\n\nCONVERSATION TEXT:\n\n${prompt}`;
-
-        console.log("Axon AI B: Prompt length:", fullPrompt.length);
-        console.log("Axon AI B: First 500 chars of prompt:\n", fullPrompt.substring(0, 500));
+        console.log("Axon AI B: Prompt length:", fullConcatenatedPrompt.length);
+        console.log("Axon AI B: First 500 chars of prompt:\n", fullConcatenatedPrompt.substring(0, 500));
 
         const requestBody = {
             contents: [
                 {
                     parts: [
-                        { text: systemPrompt },
-                        { text: `CONVERSATION TEXT:\n\n${prompt}` }
+                        { text: fullConcatenatedPrompt }
                     ]
                 }
             ],
@@ -90,37 +79,7 @@ Start with: "This is what the previous chat was about:"
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: fullPrompt
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 4000
-                },
-                safetySettings: [
-                    {
-                        category: "HARM_CATEGORY_HARASSMENT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        category: "HARM_CATEGORY_HATE_SPEECH",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    }
-                ]
-            })
+            body: JSON.stringify(requestBody)
         });
 
         console.log("Axon AI B: Server response status:", response.status);
@@ -204,41 +163,57 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return true; // Indicate async response
         }
 
+        // Define the system prompt for comprehensive context transfer (same as in callSummarizationAPI)
+        const systemPromptContent = `You are a conversation summarizer. Your ONLY job is to create a concise summary for transferring context to a new AI chat.\n\nNEVER give feedback, suggestions, or improvements. NEVER say "this is good" or "here are enhancements." ABSOLUTELY NO CONVERSATIONAL FILLER OR CLOSINGS.\n\nStart with: "This is what the previous chat was about:"\n\n- Project/topic overview\n- Current status/progress  \n- Key decisions made\n- Technical details\n- Next steps needed\n\n---\n\nCONVERSATION TEXT:\n\n`;
+
+        const fullConcatenatedPrompt = `${systemPromptContent}${conversationText}`;
+
         // Make the request to your Netlify function
+        console.log("Axon AI B: Sending request to server (from listener)...");
+        console.log("Axon AI B: Request body (from listener):");
+        
+        const payload = {
+            contents: [
+                {
+                    parts: [
+                        { text: fullConcatenatedPrompt }
+                    ]
+                }
+            ],
+            generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 4000
+            },
+            safetySettings: [
+                {
+                    category: "HARM_CATEGORY_HARASSMENT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_HATE_SPEECH",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                }
+            ]
+        };
+
+        console.log(JSON.stringify(payload, null, 2));
+
         fetch('https://axon-extension.netlify.app/.netlify/functions/summarize', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: conversationText }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 4000
-                },
-                safetySettings: [
-                    {
-                        category: "HARM_CATEGORY_HARASSMENT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        category: "HARM_CATEGORY_HATE_SPEECH",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    },
-                    {
-                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                    }
-                ]
-            })
+            body: JSON.stringify(payload)
         })
         .then(response => {
             if (!response.ok) {

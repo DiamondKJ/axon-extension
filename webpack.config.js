@@ -30,28 +30,29 @@ module.exports = {
         ]
     },
     plugins: [
-        new WebpackObfuscator({
-            rotateStringArray: true,
-            stringArray: true,
-            stringArrayEncoding: ['base64'],
-            stringArrayThreshold: 0.75,
-            identifierNamesGenerator: 'hexadecimal',
-            compact: true,
-            controlFlowFlattening: true,
-            controlFlowFlatteningThreshold: 0.75,
-            deadCodeInjection: true,
-            deadCodeInjectionThreshold: 0.4,
-            debugProtection: true,
-            debugProtectionInterval: 4000,
-            disableConsoleOutput: true,
-            numbersToExpressions: true,
-            renameGlobals: false,
-            selfDefending: true,
-            simplify: true,
-            splitStrings: true,
-            splitStringsChunkLength: 10,
-            transformObjectKeys: true,
-            unicodeEscapeSequence: false
-        })
+        // Temporarily disable obfuscation to debug prompt issue
+        // new WebpackObfuscator({
+        //     rotateStringArray: true,
+        //     stringArray: true,
+        //     stringArrayEncoding: ['base64'],
+        //     stringArrayThreshold: 0.75,
+        //     identifierNamesGenerator: 'hexadecimal',
+        //     compact: true,
+        //     controlFlowFlattening: true,
+        //     controlFlowFlatteningThreshold: 0.75,
+        //     deadCodeInjection: true,
+        //     deadCodeInjectionThreshold: 0.4,
+        //     debugProtection: true,
+        //     debugProtectionInterval: 4000,
+        //     disableConsoleOutput: true,
+        //     numbersToExpressions: true,
+        //     renameGlobals: false,
+        //     selfDefending: true,
+        //     simplify: true,
+        //     splitStrings: true,
+        //     splitStringsChunkLength: 10,
+        //     transformObjectKeys: true,
+        //     unicodeEscapeSequence: false
+        // })
     ]
 }; 
