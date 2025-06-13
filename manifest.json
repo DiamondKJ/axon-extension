@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Axon AI Context Manager",
-  "version": "1.0.0",
-  "description": "Summarize long AI conversations with one click using Google Gemini.",
+  "name": "Axon AI",
+  "version": "1.0",
+  "description": "AI-powered conversation summarization",
   "permissions": [
+    "storage",
+    "tabs",
     "clipboardWrite"
   ],
   "host_permissions": [
@@ -13,7 +15,7 @@
     "https://axon-extension.netlify.app/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.min.js"
   },
   "content_scripts": [
     {
@@ -24,19 +26,14 @@
       ],
       "css": ["content_scripts/styles.css"],
       "js": [
-        "lib/gpt-tokenizer.js",
-        "content_scripts/chatgpt_tracker.js"
+        "lib/gpt-tokenizer.min.js",
+        "content_scripts/chatgpt_tracker.min.js"
       ],
       "run_at": "document_idle"
     }
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'",
-    "script-src": "'self'",
-    "object-src": "'self'",
-    "connect-src": "'self' https://axon-extension.netlify.app/",
-    "style-src": "'self'",
-    "img-src": "'self' data:",
-    "worker-src": "'self'"
+    "connect-src": "'self' https://axon-extension.netlify.app/"
   }
 }

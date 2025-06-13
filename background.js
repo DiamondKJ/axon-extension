@@ -29,12 +29,64 @@ async function callSummarizationAPI(prompt) {
             throw new Error("Generated prompt is empty");
         }
 
-        console.log("Axon AI B: Prompt length:", prompt.length);
-        console.log("Axon AI B: First 100 chars of prompt:", prompt.substring(0, 100));
+        // Define the system prompt for comprehensive context transfer
+        const systemPrompt = `You are a highly skilled technical summarization AI. Your task is to create a comprehensive summary that captures ALL essential context for transferring to a new AI conversation. The summary must be structured to allow a new AI to immediately understand the full context and continue the conversation seamlessly.
+
+Please analyze the conversation and create a structured summary with the following sections:
+
+1. PROJECT OVERVIEW
+   - Main project/feature being built
+   - Core objectives and goals
+   - Overall architecture/approach
+
+2. CURRENT STATUS
+   - Where the project stands
+   - Latest completed work
+   - Current focus area
+
+3. KEY DECISIONS MADE
+   - Important technical choices
+   - Reasoning behind decisions
+   - Trade-offs considered
+
+4. TECHNICAL DETAILS
+   - Specific implementations
+   - Code snippets (if relevant)
+   - Configuration details
+   - Dependencies and versions
+
+5. PROBLEMS SOLVED
+   - Issues encountered
+   - Solutions implemented
+   - Workarounds used
+
+6. NEXT STEPS
+   - Immediate tasks
+   - Future considerations
+   - Known blockers
+
+7. USER PREFERENCES
+   - Coding style preferences
+   - Framework choices
+   - Development approach
+   - Any specific requirements
+
+8. CONTEXT DEPENDENCIES
+   - External factors
+   - Constraints
+   - Requirements
+   - Dependencies
+
+Format the summary with clear headings and bullet points. Keep it concise but comprehensive. Prioritize actionable information and include specific examples where relevant. The goal is to enable a new AI to pick up exactly where the previous conversation left off, with zero context loss.`;
+
+        const fullPrompt = `${systemPrompt}\n\n---\n\nCONVERSATION TEXT:\n\n${prompt}`;
+
+        console.log("Axon AI B: Prompt length:", fullPrompt.length);
+        console.log("Axon AI B: First 500 chars of prompt:\n", fullPrompt.substring(0, 500));
 
         const requestBody = {
             contents: [{
-                parts: [{ text: prompt }]
+                parts: [{ text: fullPrompt }]
             }],
             generationConfig: {
                 temperature: 0.7,
@@ -73,7 +125,7 @@ async function callSummarizationAPI(prompt) {
             body: JSON.stringify({
                 contents: [{
                     parts: [{
-                        text: prompt
+                        text: fullPrompt
                     }]
                 }],
                 generationConfig: {
@@ -117,7 +169,7 @@ async function callSummarizationAPI(prompt) {
             }
             throw new Error(errorMessage);
         }
-
+        
         const data = JSON.parse(responseText);
         if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
             console.error("Axon AI B: Invalid response format:", data);
@@ -136,48 +188,136 @@ async function callSummarizationAPI(prompt) {
     }
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "summarizeText") {
-        (async () => {
-            const tabId = sender.tab?.id;
-            try {
-                const { textToSummarize } = request;
-                if (!textToSummarize || !textToSummarize.trim()) throw new Error("There is no text to summarize.");
+// Add warm-up mechanism for Netlify function
+function startWarmupInterval() {
+    // Initial warm-up call
+    warmupFunction();
+    
+    // Set up interval for subsequent warm-up calls
+    setInterval(warmupFunction, 10 * 60 * 1000); // 10 minutes
+}
 
-                // --- PROMPT WITH THE LENGTH CONSTRAINT ---
-                const systemPrompt = `You are a precision-focused summarization engine. Your task is to meticulously analyze the following conversation and produce a single, comprehensive, and well-organized summary. Extract all key decisions, action items, critical data points, important questions, and definitive conclusions. Synthesize this information into a coherent narrative. The final output should be a clean, easy-to-read summary that captures the essence of the entire conversation. CRITICAL INSTRUCTION: The final summary must be under 4000 characters in total length.`;
-                const fullPrompt = `${systemPrompt}\n\n---\n\nCONVERSATION TEXT:\n\n${textToSummarize}`;
-                
-                if(tabId) {
-                    try {
-                        await chrome.tabs.sendMessage(tabId, { action: "summarizationProgress", currentChunk: 1, totalChunks: 1 });
-                    } catch (e) {
-                        console.log("Axon AI B: Could not send progress update to tab, continuing anyway");
+async function warmupFunction() {
+    try {
+        console.log("Axon AI B: Warming up Netlify function...");
+        const response = await fetch('https://axon-extension.netlify.app/.netlify/functions/summarize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: "warmup" }]
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            console.warn("Axon AI B: Warm-up request failed:", response.status);
+        } else {
+            console.log("Axon AI B: Warm-up successful");
+        }
+    } catch (error) {
+        console.warn("Axon AI B: Warm-up request failed:", error.message);
+    }
+}
+
+// Start the warm-up interval when the background script loads
+startWarmupInterval();
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log("Service Worker: Message received from content script:", message.action);
+
+    if (message.action === "summarizeConversation") {
+        const conversationText = message.text;
+
+        if (!conversationText || conversationText.length === 0) {
+            sendResponse({ success: false, error: "No conversation text to summarize." });
+            return true; // Indicate async response
+        }
+
+        // Make the request to your Netlify function
+        fetch('https://axon-extension.netlify.app/.netlify/functions/summarize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: conversationText }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 4000
+                },
+                safetySettings: [
+                    {
+                        category: "HARM_CATEGORY_HARASSMENT",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_HATE_SPEECH",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE"
                     }
-                }
-                
-                const finalSummary = await callSummarizationAPI(fullPrompt);
-                
-                sendResponse({ status: "success", summary: finalSummary });
-
-            } catch (error) {
-                console.error("Axon AI B: Critical summarization error:", error);
-                reportErrorToBackend({
-                    context: "callSummarizationAPI",
-                    message: error.message,
-                    stack: error.stack
+                ]
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    console.error("Netlify Function Error:", response.status, errorData);
+                    sendResponse({ 
+                        success: false, 
+                        error: `Summarization API error: ${errorData.error || errorData.details?.error || 'Unknown error'}` 
+                    });
+                }).catch(e => {
+                    // Handle case where response is not JSON
+                    console.error("Error parsing error response:", e);
+                    sendResponse({ 
+                        success: false, 
+                        error: `Server error: ${response.status} ${response.statusText}` 
+                    });
                 });
-                sendResponse({ status: "error", message: error.message || "An unknown error occurred." });
             }
-        })();
-        return true;
-    } else if (request.action === "reportError") { // New error reporting action
+            return response.json();
+        })
+        .then(data => {
+            console.log("Service Worker: Summary received from Netlify");
+            if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                sendResponse({ success: true, summary: data.candidates[0].content.parts[0].text });
+            } else {
+                sendResponse({ success: false, error: "No summary returned from API." });
+            }
+        })
+        .catch(error => {
+            console.error("Service Worker: Error during summarization API call:", error);
+            sendResponse({ 
+                success: false, 
+                error: "Network or server error during summarization." 
+            });
+        });
+
+        return true; // IMPORTANT: Indicate that you will send a response asynchronously
+    } else if (message.action === "reportError") { // New error reporting action
         (async () => {
-            reportErrorToBackend(request.errorDetails);
+            reportErrorToBackend(message.errorDetails);
             sendResponse({ status: "acknowledged" });
         })();
         return true;
     }
+
+    // Return false for other messages if no response is needed
+    return false;
 });
 
 console.log("Axon AI B: onMessage listener attached. Script fully evaluated.");

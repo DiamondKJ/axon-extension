@@ -59,6 +59,16 @@ exports.handler = async (event, context) => {
 
     const { contents, generationConfig, safetySettings } = requestBody;
 
+    // Handle warm-up requests
+    if (contents?.[0]?.parts?.[0]?.text === "warmup") {
+        console.log('Warm-up request received');
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ status: 'warm', message: 'Function is ready' })
+        };
+    }
+
     if (!contents || !contents[0]?.parts?.[0]?.text) {
         console.error('Empty or invalid contents received', requestBody);
         return {

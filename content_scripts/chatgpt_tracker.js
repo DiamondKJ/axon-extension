@@ -58,23 +58,23 @@ const PLATFORM_SELECTORS = {
 // --- Core Logic ---
 async function init() {
     try {
-        currentPlatform = detectPlatform();
+    currentPlatform = detectPlatform();
         if (!currentPlatform) {
             console.warn("Axon AI C: No supported platform detected. Initialization aborted.");
             return; // Exit if platform not detected
         }
-        SELECTORS = PLATFORM_SELECTORS[currentPlatform];
-        console.log(`Axon AI C: Initializing for ${currentPlatform}.`);
+    SELECTORS = PLATFORM_SELECTORS[currentPlatform];
+    console.log(`Axon AI C: Initializing for ${currentPlatform}.`);
 
-        CONTEXT_LIMIT = MODEL_INFO[currentPlatform]['Default'].limit;
+    CONTEXT_LIMIT = MODEL_INFO[currentPlatform]['Default'].limit;
 
-        injectAnimationStyles();
-        setupTokenDisplayUI();
-        
-        startLookoutObserver();
-        
-        if (uiVisibilityInterval) clearInterval(uiVisibilityInterval);
-        uiVisibilityInterval = setInterval(ensureUIVisible, 2000);
+    injectAnimationStyles();
+    setupTokenDisplayUI();
+    
+    startLookoutObserver();
+    
+    if (uiVisibilityInterval) clearInterval(uiVisibilityInterval);
+    uiVisibilityInterval = setInterval(ensureUIVisible, 2000);
     } catch (error) {
         reportContentScriptError(error, "init");
         // Attempt to disable UI or show a critical error state
@@ -90,41 +90,41 @@ async function init() {
 // --- NEW: The robust two-level observer system ---
 function startLookoutObserver() {
     try {
-        console.log("Axon AI C: Starting lookout observer to watch for chat container.");
-        
-        const lookoutObserver = new MutationObserver((mutations, observer) => {
+    console.log("Axon AI C: Starting lookout observer to watch for chat container.");
+    
+    const lookoutObserver = new MutationObserver((mutations, observer) => {
             try { // Catch errors inside the observer callback
-                const chatContainer = document.querySelector(SELECTORS.mainContainer);
-                
-                if (chatContainer) {
-                    // If we find the container and aren't already watching it...
-                    if (!chatContainer.dataset.axonWatching) {
-                        console.log("Axon AI C: Chat container found. Attaching message observer.");
-                        chatContainer.dataset.axonWatching = 'true'; // Mark as watched
-                        attachMessageObserver(chatContainer);
+        const chatContainer = document.querySelector(SELECTORS.mainContainer);
+        
+        if (chatContainer) {
+            // If we find the container and aren't already watching it...
+            if (!chatContainer.dataset.axonWatching) {
+                console.log("Axon AI C: Chat container found. Attaching message observer.");
+                chatContainer.dataset.axonWatching = 'true'; // Mark as watched
+                attachMessageObserver(chatContainer);
                         void debouncedProcessAllMessages(); // Initial count with debounce
-                    }
-                } else {
-                    // If the container disappears (like on Claude chat switch), disconnect the old message watcher
-                    if (messageObserver) {
-                        console.log("Axon AI C: Chat container removed. Disconnecting old message observer.");
-                        messageObserver.disconnect();
-                        messageObserver = null;
-                    }
+            }
+        } else {
+            // If the container disappears (like on Claude chat switch), disconnect the old message watcher
+            if (messageObserver) {
+                console.log("Axon AI C: Chat container removed. Disconnecting old message observer.");
+                messageObserver.disconnect();
+                messageObserver = null;
+            }
                 }
             } catch (error) {
                 reportContentScriptError(error, "startLookoutObserver.callback");
                 // Attempt to stop the lookout observer if its callback is failing repeatedly
                 observer.disconnect();
                 console.error("Axon AI C: Lookout observer disconnected due to repeated errors.");
-            }
-        });
+        }
+    });
 
-        // Start watching the whole body for the chat container to appear or disappear
-        lookoutObserver.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+    // Start watching the whole body for the chat container to appear or disappear
+    lookoutObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
     } catch (error) {
         reportContentScriptError(error, "startLookoutObserver.setup");
         console.error("Axon AI C: Failed to set up lookout observer.");
@@ -133,7 +133,7 @@ function startLookoutObserver() {
 
 function attachMessageObserver(targetNode) {
     try {
-        if (messageObserver) messageObserver.disconnect();
+    if (messageObserver) messageObserver.disconnect();
 
         messageObserver = new MutationObserver(() => {
             try { // Catch errors inside the observer callback
@@ -146,10 +146,10 @@ function attachMessageObserver(targetNode) {
                 console.error("Axon AI C: Message observer disconnected due to repeated errors.");
             }
         });
-        messageObserver.observe(targetNode, {
-            childList: true,
-            subtree: true
-        });
+    messageObserver.observe(targetNode, {
+        childList: true,
+        subtree: true
+    });
     } catch (error) {
         reportContentScriptError(error, "attachMessageObserver.setup");
         console.error("Axon AI C: Failed to set up message observer.");
@@ -158,7 +158,7 @@ function attachMessageObserver(targetNode) {
 
 function injectAnimationStyles() {
     try {
-        const styleId = 'axon-animation-styles';
+    const styleId = 'axon-animation-styles';
         if (document.getElementById(styleId)) return; // Styles are now loaded via styles.css
 
         // The dynamic style injection code has been moved to content_scripts/styles.css
@@ -167,16 +167,16 @@ function injectAnimationStyles() {
 
     } catch (error) {
         reportContentScriptError(error, "injectAnimationStyles");
-    }
+}
 }
 
 async function countTokens(text) {
     try {
         // Use GPT tokenizer for all platforms
-        if (typeof GPTTokenizer_cl100k_base !== 'undefined') {
-            try {
-                return GPTTokenizer_cl100k_base.encode(text).length;
-            } catch (e) {
+    if (typeof GPTTokenizer_cl100k_base !== 'undefined') {
+        try {
+            return GPTTokenizer_cl100k_base.encode(text).length;
+        } catch (e) {
                 reportContentScriptError(e, "countTokens.tokenizerEncode");
                 return Math.ceil(text.length / 4); // Fallback to approximate
             }
@@ -190,17 +190,17 @@ async function countTokens(text) {
 
 async function processAllMessages() {
     try {
-        if (!document.querySelector(SELECTORS.mainContainer)) return;
-        
-        let combinedText = "";
-        const userMessages = document.querySelectorAll(SELECTORS.userMessages);
-        const assistantMessages = document.querySelectorAll(SELECTORS.assistantMessages);
+    if (!document.querySelector(SELECTORS.mainContainer)) return;
+    
+    let combinedText = "";
+    const userMessages = document.querySelectorAll(SELECTORS.userMessages);
+    const assistantMessages = document.querySelectorAll(SELECTORS.assistantMessages);
 
-        userMessages.forEach(el => { combinedText += el.innerText + "\n"; });
-        assistantMessages.forEach(el => { combinedText += el.innerText + "\n"; });
+    userMessages.forEach(el => { combinedText += el.innerText + "\n"; });
+    assistantMessages.forEach(el => { combinedText += el.innerText + "\n"; });
 
         totalTokens = await countTokens(combinedText);
-        updateTokenDisplayUI();
+    updateTokenDisplayUI();
     } catch (error) {
         reportContentScriptError(error, "processAllMessages");
         totalTokens = 0; // Reset tokens on error
@@ -225,13 +225,38 @@ function getConversationAsTextForSummary() {
 
         allMessages.forEach(msg => {
             const clone = msg.element.cloneNode(true);
+            
+            // Preserve code blocks but remove UI elements
+            const codeBlocks = clone.querySelectorAll('pre, code');
+            codeBlocks.forEach(block => {
+                // Keep the code content but remove any UI elements within it
+                block.querySelectorAll('button, [aria-label*="copy"], [data-testid*="code-block-header"]').forEach(el => el.remove());
+            });
+            
+            // Remove other UI elements
             clone.querySelectorAll('img, button, svg, [aria-label*="copy"], [data-testid*="code-block-header"]').forEach(el => el.remove());
+            
             const text = clone.innerText || clone.textContent || "";
             const role = msg.type === 'user' ? "User" : "Assistant";
+            
+            // Add message number for better context
+            const messageNumber = allMessages.indexOf(msg) + 1;
+            
             if (text.trim()) {
-                conversationText += `${role}: ${text.trim()}\n\n`;
+                conversationText += `[Message ${messageNumber}] ${role}:\n${text.trim()}\n\n`;
             }
         });
+
+        // Add conversation metadata
+        const metadata = {
+            platform: currentPlatform,
+            timestamp: new Date().toISOString(),
+            totalMessages: allMessages.length,
+            contextLimit: CONTEXT_LIMIT
+        };
+
+        conversationText = `CONVERSATION METADATA:\n${JSON.stringify(metadata, null, 2)}\n\n---\n\n${conversationText}`;
+        
         return conversationText;
     } catch (error) {
         reportContentScriptError(error, "getConversationAsTextForSummary");
@@ -241,119 +266,97 @@ function getConversationAsTextForSummary() {
 
 function detectPlatform() {
     try {
-        const href = window.location.href;
-        if (href.startsWith("https://chatgpt.com/")) return "ChatGPT";
-        if (href.startsWith("https://gemini.google.com/")) return "Gemini";
-        if (href.startsWith("https://claude.ai/")) return "Claude";
-        return null;
+    const href = window.location.href;
+    if (href.startsWith("https://chatgpt.com/")) return "ChatGPT";
+    if (href.startsWith("https://gemini.google.com/")) return "Gemini";
+    if (href.startsWith("https://claude.ai/")) return "Claude";
+    return null;
     } catch (error) {
         reportContentScriptError(error, "detectPlatform");
         return null; // Return null on error
     }
 }
 
-function handleSummarizeClick() {
-    try {
-        if (summarizeButton && summarizeButton.disabled) return;
-        summarizeButton.disabled = true;
-        summarizeButton.style.display = 'none';
+async function sendSummarizeRequest() {
+    if (summarizeButton && summarizeButton.disabled) return;
 
-        if (uiCircleContainer) {
-            uiCircleContainer.classList.add('axon-processing');
-            uiCircleContainer.style.setProperty('--progress-percent', '0%');
-        }
-    
-        let progress = 0;
-        progressInterval = setInterval(() => {
-            try { // Catch errors inside the interval callback
-                progress += 5; 
-                if (progress <= 95 && uiCircleContainer) {
-                    uiCircleContainer.style.setProperty('--progress-percent', `${progress}%`);
-                } else {
-                    clearInterval(progressInterval);
-                }
-            } catch (error) {
-                reportContentScriptError(error, "handleSummarizeClick.progressInterval");
-                clearInterval(progressInterval); // Stop interval on error
-            }
-        }, 500);
+    // Show loading state immediately on button click
+    updateSummarizeButtonState('loading');
 
-        const conversationText = getConversationAsTextForSummary();
-        if (!conversationText) {
-            throw new Error("No conversation text available for summarization.");
-        }
-        console.log(`Axon AI C: Sending 'summarizeText' to background...`);
-
-        chrome.runtime.sendMessage({ action: "summarizeText", textToSummarize: conversationText }, 
-        (response) => { 
-            clearInterval(progressInterval);
-
-            const handleFinish = (successMessage = null) => {
-                try { // Catch errors inside handleFinish
-                    if (successMessage) {
-                        if (uiCircleContainer) uiCircleContainer.style.setProperty('--progress-percent', `100%`);
-                        setTimeout(() => {
-                            resetSummarizeButton(successMessage);
-                            setTimeout(() => resetSummarizeButton("Summarize"), 2000);
-                        }, 1000);
-                    } else {
-                        resetSummarizeButton();
-                    }
-                } catch (error) {
-                    reportContentScriptError(error, "handleSummarizeClick.handleFinish");
-                    resetSummarizeButton(); // Ensure button is reset even if handleFinish fails
-                }
-            };
-            
-            if (chrome.runtime.lastError) {
-                reportContentScriptError(chrome.runtime.lastError, "handleSummarizeClick.sendMessageResponse");
-                alert("Error: " + chrome.runtime.lastError.message);
-                handleFinish();
-                return; 
-            }
-            if (response && response.status === 'error') { 
-                reportContentScriptError(new Error(response.message), "handleSummarizeClick.summarizationError");
-                alert("Summarization Failed: " + response.message);
-                handleFinish();
-            } else if (response && response.status === 'success' && response.summary) {
-                navigator.clipboard.writeText(response.summary).then(() => {
-                    console.log("Axon AI C: Summary successfully copied to clipboard.");
-                    showNotification("✓ Summary copied to clipboard!");
-                    handleFinish("✓ Copied!");
-                }).catch(err => {
-                    reportContentScriptError(err, "handleSummarizeClick.clipboardCopy");
-                    console.error("Axon AI C: Failed to copy summary to clipboard:", err);
-                    showNotification("✗ Failed to copy!");
-                    handleFinish();
-                });
-            } else { 
-                reportContentScriptError(new Error("Unexpected response from background script"), "handleSummarizeClick.unexpectedResponse");
-                alert("An unexpected response was received.");
-                handleFinish();
-            }
-        });
-    } catch (error) {
-        reportContentScriptError(error, "handleSummarizeClick.outer");
-        alert("Axon AI: An internal error occurred during summarization.");
-        resetSummarizeButton("Error"); // Indicate an error on the button
+    if (uiCircleContainer) {
+        uiCircleContainer.classList.add('axon-processing');
+        uiCircleContainer.style.setProperty('--progress-percent', '0%');
     }
+    
+    let progress = 0;
+    progressInterval = setInterval(() => {
+        try { // Catch errors inside the interval callback
+        progress += 5; 
+        if (progress <= 95 && uiCircleContainer) {
+            uiCircleContainer.style.setProperty('--progress-percent', `${progress}%`);
+        } else {
+            clearInterval(progressInterval);
+            }
+        } catch (error) {
+            reportContentScriptError(error, "sendSummarizeRequest.progressInterval");
+            clearInterval(progressInterval); // Stop interval on error
+        }
+    }, 500);
+
+    const conversationText = getConversationAsTextForSummary(); // Get the full text
+    if (!conversationText) {
+        clearInterval(progressInterval);
+        reportContentScriptError(new Error("No conversation text available for summarization."), "sendSummarizeRequest.noText");
+        showNotification("No conversation text to summarize.", 'error');
+        updateSummarizeButtonState('idle');
+            return;
+        }
+
+    try {
+        // Send message to service worker and await response
+        const response = await chrome.runtime.sendMessage({
+            action: "summarizeConversation",
+            text: conversationText
+        });
+
+            clearInterval(progressInterval);
+                    if (uiCircleContainer) uiCircleContainer.style.setProperty('--progress-percent', `100%`);
+
+        // Check if the response indicates success or failure
+        if (response && response.success) {
+            // Summary received, copy to clipboard
+            await navigator.clipboard.writeText(response.summary);
+            showNotification("✓ Summary copied to clipboard!", 'success');
+            setTimeout(() => updateSummarizeButtonState('idle'), 2000);
+                } else {
+            // Handle error reported by service worker
+            showNotification(response.error || "Summarization failed. Please try again.", 'error');
+            updateSummarizeButtonState('idle');
+        }
+    } catch (error) {
+        clearInterval(progressInterval);
+        // This catch handles issues like service worker not responding, or permission errors
+        console.error("Error sending message to service worker or processing response:", error);
+        showNotification("Extension communication error. Try reloading the page.", 'error');
+        updateSummarizeButtonState('idle');
+            }
 }
 
 function resetSummarizeButton(message = "Summarize") {
     try {
-        if (progressInterval) clearInterval(progressInterval);
+    if (progressInterval) clearInterval(progressInterval);
 
-        if (summarizeButton) {
-            summarizeButton.textContent = message;
-            summarizeButton.disabled = false;
-            summarizeButton.style.display = 'block';
+    if (summarizeButton) {
+        summarizeButton.textContent = message;
+        summarizeButton.disabled = false;
+        summarizeButton.style.display = 'block';
+    }
+    
+    if (message === "Summarize") {
+        if (uiCircleContainer) {
+            uiCircleContainer.classList.remove('axon-processing');
+            uiCircleContainer.style.backgroundImage = ''; 
         }
-        
-        if (message === "Summarize") {
-            if (uiCircleContainer) {
-                uiCircleContainer.classList.remove('axon-processing');
-                uiCircleContainer.style.backgroundImage = ''; 
-            }
         }
     } catch (error) {
         reportContentScriptError(error, "resetSummarizeButton");
@@ -362,65 +365,65 @@ function resetSummarizeButton(message = "Summarize") {
 
 function setupTokenDisplayUI() {
     try {
-        if (document.getElementById('axon-ui-circle-container')) return;
+    if (document.getElementById('axon-ui-circle-container')) return;
 
         // Create notification element
         const notification = document.createElement('div');
         notification.id = 'axon-notification';
         document.body.appendChild(notification);
 
-        uiCircleContainer = document.createElement('div');
-        uiCircleContainer.id = 'axon-ui-circle-container';
-        
-        percentageTextElement = document.createElement('span');
-        percentageTextElement.id = 'axon-percentage-text';
-        uiCircleContainer.appendChild(percentageTextElement);
-        
-        hoverMenuElement = document.createElement('div');
-        hoverMenuElement.id = 'axon-hover-menu';
-        hoverMenuElement.style.display = 'none';
-        
-        fullDetailTextElement = document.createElement('div');
-        fullDetailTextElement.className = 'axon-detail-text';
-        hoverMenuElement.appendChild(fullDetailTextElement);
-        
-        summarizeButton = document.createElement('button');
-        summarizeButton.textContent = 'Summarize';
-        summarizeButton.addEventListener('click', handleSummarizeClick);
-        hoverMenuElement.appendChild(summarizeButton);
+    uiCircleContainer = document.createElement('div');
+    uiCircleContainer.id = 'axon-ui-circle-container';
+    
+    percentageTextElement = document.createElement('span');
+    percentageTextElement.id = 'axon-percentage-text';
+    uiCircleContainer.appendChild(percentageTextElement);
+    
+    hoverMenuElement = document.createElement('div');
+    hoverMenuElement.id = 'axon-hover-menu';
+    hoverMenuElement.style.display = 'none';
+    
+    fullDetailTextElement = document.createElement('div');
+    fullDetailTextElement.className = 'axon-detail-text';
+    hoverMenuElement.appendChild(fullDetailTextElement);
+    
+    summarizeButton = document.createElement('button');
+    summarizeButton.textContent = 'Summarize';
+        summarizeButton.addEventListener('click', sendSummarizeRequest);
+    hoverMenuElement.appendChild(summarizeButton);
 
-        uiCircleContainer.appendChild(hoverMenuElement);
-        document.body.appendChild(uiCircleContainer);
+    uiCircleContainer.appendChild(hoverMenuElement);
+    document.body.appendChild(uiCircleContainer);
 
-        uiCircleContainer.addEventListener('mouseenter', () => { 
+    uiCircleContainer.addEventListener('mouseenter', () => { 
             try {
-                clearTimeout(hideMenuTimer);
-                hoverMenuElement.style.display = 'flex';
+        clearTimeout(hideMenuTimer);
+        hoverMenuElement.style.display = 'flex';
             } catch (error) {
                 reportContentScriptError(error, "uiCircleContainer.mouseenter");
             }
-        });
-        uiCircleContainer.addEventListener('mouseleave', () => {
+    });
+    uiCircleContainer.addEventListener('mouseleave', () => {
             try {
-                hideMenuTimer = setTimeout(() => { 
-                    hoverMenuElement.style.display = 'none';
-                }, 1000);
+        hideMenuTimer = setTimeout(() => { 
+            hoverMenuElement.style.display = 'none';
+        }, 1000);
             } catch (error) {
                 reportContentScriptError(error, "uiCircleContainer.mouseleave");
             }
-        });
-        hoverMenuElement.addEventListener('mouseenter', () => {
+    });
+    hoverMenuElement.addEventListener('mouseenter', () => {
             try {
-                clearTimeout(hideMenuTimer);
+        clearTimeout(hideMenuTimer);
             } catch (error) {
                 reportContentScriptError(error, "hoverMenuElement.mouseenter");
             }
-        });
-        hoverMenuElement.addEventListener('mouseleave', () => {
+    });
+    hoverMenuElement.addEventListener('mouseleave', () => {
             try {
-                hideMenuTimer = setTimeout(() => { 
-                    hoverMenuElement.style.display = 'none';
-                }, 500);
+        hideMenuTimer = setTimeout(() => { 
+            hoverMenuElement.style.display = 'none';
+        }, 500);
             } catch (error) {
                 reportContentScriptError(error, "hoverMenuElement.mouseleave");
             }
@@ -435,9 +438,9 @@ function setupTokenDisplayUI() {
 
 function updateTokenDisplayUI() {
     try {
-        if (!percentageTextElement || !fullDetailTextElement) return;
-        const percentage = CONTEXT_LIMIT > 0 ? (totalTokens / CONTEXT_LIMIT) * 100 : 0;
-        percentageTextElement.textContent = `${percentage.toFixed(0)}%`;
+    if (!percentageTextElement || !fullDetailTextElement) return;
+    const percentage = CONTEXT_LIMIT > 0 ? (totalTokens / CONTEXT_LIMIT) * 100 : 0;
+    percentageTextElement.textContent = `${percentage.toFixed(0)}%`;
         fullDetailTextElement.textContent = `Axon (${currentPlatform || '...' || 'N/A'}): ${totalTokens} Tokens / ${CONTEXT_LIMIT}`;
     } catch (error) {
         reportContentScriptError(error, "updateTokenDisplayUI");
@@ -448,8 +451,8 @@ function updateTokenDisplayUI() {
 
 function ensureUIVisible() {
     try {
-        if (uiCircleContainer && !uiCircleContainer.isConnected) {
-            document.body.appendChild(uiCircleContainer);
+    if (uiCircleContainer && !uiCircleContainer.isConnected) {
+        document.body.appendChild(uiCircleContainer);
         }
     } catch (error) {
         reportContentScriptError(error, "ensureUIVisible");
@@ -458,7 +461,7 @@ function ensureUIVisible() {
 
 function onPageLoad() {
     try {
-        setTimeout(init, 500); 
+    setTimeout(init, 500); 
     } catch (error) {
         reportContentScriptError(error, "onPageLoad");
     }
@@ -479,7 +482,7 @@ if (document.readyState === 'loading') {
     onPageLoad();
 }
 
-function showNotification(message, duration = 2000) {
+function showNotification(message, type = 'info', duration = 2000) {
     try {
         const notification = document.getElementById('axon-notification');
         if (!notification) {
@@ -488,16 +491,47 @@ function showNotification(message, duration = 2000) {
         }
 
         notification.textContent = message;
+        // Remove previous type classes
+        notification.classList.remove('success', 'error', 'info'); 
+        notification.classList.add(type);
         notification.classList.add('show');
 
         setTimeout(() => {
             try { // Catch errors inside timeout
                 notification.classList.remove('show');
+                // Optionally remove type class after hiding
+                setTimeout(() => notification.classList.remove(type), 300); 
             } catch (error) {
                 reportContentScriptError(error, "showNotification.timeout");
             }
         }, duration);
     } catch (error) {
         reportContentScriptError(error, "showNotification");
+    }
+}
+
+function updateSummarizeButtonState(state) {
+    try {
+        if (progressInterval) clearInterval(progressInterval); // Clear interval when state changes
+
+        if (summarizeButton) {
+            summarizeButton.disabled = state === 'loading';
+            summarizeButton.style.display = state === 'loading' ? 'none' : 'block';
+            summarizeButton.textContent = state === 'loading' ? 'Summarizing...' :
+                                          state === 'error' ? 'Error' : 'Summarize';
+        }
+
+        if (uiCircleContainer) {
+            if (state === 'loading') {
+                uiCircleContainer.classList.add('axon-processing');
+                uiCircleContainer.style.setProperty('--progress-percent', '0%');
+            } else if (state === 'idle' || state === 'error') {
+                uiCircleContainer.classList.remove('axon-processing');
+                uiCircleContainer.style.backgroundImage = ''; // Reset background
+                uiCircleContainer.style.setProperty('--progress-percent', '0%');
+            }
+        }
+    } catch (error) {
+        reportContentScriptError(error, "updateSummarizeButtonState");
     }
 }
