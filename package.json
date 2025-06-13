@@ -8,7 +8,8 @@
     "build:zip": "node scripts/create-zip.js"
   },
   "dependencies": {
-    "gpt-tokenizer": "^2.1.2"
+    "gpt-tokenizer": "^2.1.2",
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
