@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Axon AI",
+  "version": "1.0",
+  "description": "AI-powered conversation summarization",
+  "permissions": [
+    "storage",
+    "tabs",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://gemini.google.com/*",
+    "https://claude.ai/*",
+    "https://axon-extension.netlify.app/*"
+  ],
+  "background": {
+    "service_worker": "background.min.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://gemini.google.com/*",
+        "https://claude.ai/*"
+      ],
+      "css": [
+        "content_scripts/styles.css"
+      ],
+      "js": [
+        "lib/gpt-tokenizer.min.js",
+        "content_scripts/chatgpt_tracker.min.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'",
+    "connect-src": "'self' https://axon-extension.netlify.app/"
+  }
+}

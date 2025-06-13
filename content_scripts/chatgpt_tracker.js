@@ -277,6 +277,123 @@ function detectPlatform() {
     }
 }
 
+// Function to create and show the upgrade modal
+function displayUpgradeModal() {
+    // Remove existing modal if any
+    const existingModal = document.getElementById('axon-upgrade-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Create modal container
+    const modal = document.createElement('div');
+    modal.id = 'axon-upgrade-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999999;
+    `;
+
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background-color: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    `;
+
+    // Create title
+    const title = document.createElement('h2');
+    title.textContent = "You've Reached Your Free Limit";
+    title.style.cssText = `
+        color: #333;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    `;
+
+    // Create body text
+    const bodyText = document.createElement('p');
+    bodyText.textContent = "You have used all 20 of your free summaries for the month. To get unlimited summaries and support Axon AI, please upgrade to Pro.";
+    bodyText.style.cssText = `
+        color: #666;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    `;
+
+    // Create upgrade button
+    const upgradeButton = document.createElement('button');
+    upgradeButton.textContent = "Upgrade to Pro";
+    upgradeButton.style.cssText = `
+        background-color: #007AFF;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-bottom: 1rem;
+        transition: background-color 0.2s;
+    `;
+    upgradeButton.onmouseover = () => upgradeButton.style.backgroundColor = '#0056b3';
+    upgradeButton.onmouseout = () => upgradeButton.style.backgroundColor = '#007AFF';
+    upgradeButton.onclick = () => window.open('https://my-future-payment-page.com', '_blank');
+
+    // Create footer text
+    const footerText = document.createElement('p');
+    footerText.textContent = "Your free limit will reset on the 1st of next month.";
+    footerText.style.cssText = `
+        color: #888;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+    `;
+
+    // Create close button
+    const closeButton = document.createElement('button');
+    closeButton.textContent = "×";
+    closeButton.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #666;
+        cursor: pointer;
+        padding: 5px;
+    `;
+    closeButton.onclick = () => modal.remove();
+
+    // Assemble modal
+    modalContent.appendChild(closeButton);
+    modalContent.appendChild(title);
+    modalContent.appendChild(bodyText);
+    modalContent.appendChild(upgradeButton);
+    modalContent.appendChild(footerText);
+    modal.appendChild(modalContent);
+
+    // Add modal to page
+    document.body.appendChild(modal);
+
+    // Close modal when clicking outside
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    };
+}
+
+// Modify the sendSummarizeRequest function to handle the 403 error
 async function sendSummarizeRequest() {
     if (summarizeButton && summarizeButton.disabled) return;
 
@@ -309,18 +426,25 @@ async function sendSummarizeRequest() {
         reportContentScriptError(new Error("No conversation text available for summarization."), "sendSummarizeRequest.noText");
         showNotification("No conversation text to summarize.", 'error');
         updateSummarizeButtonState('idle');
-            return;
-        }
+        return;
+    }
 
     try {
+        // Get the user ID from storage
+        const userData = await chrome.storage.local.get('userId');
+        if (!userData.userId) {
+            throw new Error("User ID not found");
+        }
+
         // Send message to service worker and await response
         const response = await chrome.runtime.sendMessage({
             action: "summarizeConversation",
-            text: conversationText
+            text: conversationText,
+            userId: userData.userId
         });
 
-            clearInterval(progressInterval);
-                    if (uiCircleContainer) uiCircleContainer.style.setProperty('--progress-percent', `100%`);
+        clearInterval(progressInterval);
+        if (uiCircleContainer) uiCircleContainer.style.setProperty('--progress-percent', `100%`);
 
         // Check if the response indicates success or failure
         if (response && response.success) {
@@ -328,9 +452,14 @@ async function sendSummarizeRequest() {
             await navigator.clipboard.writeText(response.summary);
             showNotification("✓ Summary copied to clipboard!", 'success');
             setTimeout(() => updateSummarizeButtonState('idle'), 2000);
-                } else {
-            // Handle error reported by service worker
-            showNotification(response.error || "Summarization failed. Please try again.", 'error');
+        } else {
+            // Handle specific error cases
+            if (response.status === 403 && response.error === 'limit_exceeded') {
+                displayUpgradeModal();
+            } else {
+                // Handle other errors
+                showNotification(response.error || "Summarization failed. Please try again.", 'error');
+            }
             updateSummarizeButtonState('idle');
         }
     } catch (error) {
@@ -339,7 +468,7 @@ async function sendSummarizeRequest() {
         console.error("Error sending message to service worker or processing response:", error);
         showNotification("Extension communication error. Try reloading the page.", 'error');
         updateSummarizeButtonState('idle');
-            }
+    }
 }
 
 function resetSummarizeButton(message = "Summarize") {

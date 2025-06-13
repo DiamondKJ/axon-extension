@@ -1,2 +1,9 @@
 [build]
-  functions = "netlify/functions" 
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[kv]]
+  namespace = "user_data"
+  key = "user_data" 

@@ -13,26 +13,24 @@ async function createZip() {
         fs.mkdirSync('dist/content_scripts', { recursive: true });
         fs.mkdirSync('dist/lib', { recursive: true });
 
-        // Copy files to their correct locations
+        // Copy files to their correct locations (using original source paths)
         const filesToCopy = [
             { src: 'manifest.json', dest: 'dist/manifest.json' },
             { src: 'content_scripts/styles.css', dest: 'dist/content_scripts/styles.css' },
-            { src: 'lib/gpt-tokenizer.min.js', dest: 'dist/lib/gpt-tokenizer.min.js' },
-            { src: 'background.min.js', dest: 'dist/background.min.js' },
-            { src: 'content_scripts/chatgpt_tracker.min.js', dest: 'dist/content_scripts/chatgpt_tracker.min.js' }
+            { src: 'lib/gpt-tokenizer.min.js', dest: 'dist/lib/gpt-tokenizer.min.js' } // This is already minified
         ];
 
         // Copy each file
-        filesToCopy.forEach(file => {
+        for (const file of filesToCopy) {
             if (fs.existsSync(file.src)) {
                 fs.copyFileSync(file.src, file.dest);
                 console.log(`Copied ${file.src} to ${file.dest}`);
             } else {
                 console.error(`Source file not found: ${file.src}`);
             }
-        });
+        }
 
-        // Update manifest.json to use correct paths
+        // Update manifest.json to use correct paths (already done by copy)
         const manifest = JSON.parse(fs.readFileSync('dist/manifest.json', 'utf8'));
         manifest.background.service_worker = 'background.min.js';
         manifest.content_scripts[0].js = [

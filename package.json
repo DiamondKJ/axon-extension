@@ -4,21 +4,16 @@
   "description": "AI-powered conversation summarization",
   "scripts": {
     "build": "npm run build:js && npm run build:zip",
-    "build:js": "webpack --mode production",
+    "build:js": "mkdir -p dist/content_scripts && javascript-obfuscator background.js --output dist/background.min.js --compact true --control-flow-flattening true --control-flow-flattening-threshold 1 --dead-code-injection true --dead-code-injection-threshold 0.75 --debug-protection true --identifier-names-generator mangled --string-array-rotate true --self-defending true --string-array true --string-array-encoding base64 --string-array-threshold 1 --unicode-escape-sequence true && javascript-obfuscator content_scripts/chatgpt_tracker.js --output dist/content_scripts/chatgpt_tracker.min.js --compact true --control-flow-flattening true --control-flow-flattening-threshold 1 --dead-code-injection true --dead-code-injection-threshold 0.75 --debug-protection true --identifier-names-generator mangled --string-array-rotate true --self-defending true --string-array true --string-array-encoding base64 --string-array-threshold 1 --unicode-escape-sequence true",
     "build:zip": "node scripts/create-zip.js"
   },
   "dependencies": {
     "gpt-tokenizer": "^2.1.2",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^2.6.7",
+    "zip-a-folder": "^3.1.9"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.0",
-    "@babel/preset-env": "^7.24.0",
-    "babel-loader": "^9.1.3",
     "javascript-obfuscator": "^4.1.0",
-    "webpack": "^5.90.3",
-    "webpack-cli": "^5.1.4",
-    "webpack-obfuscator": "^3.5.1",
-    "zip-a-folder": "^1.1.5"
+    "netlify-cli": "^22.1.3"
   }
 }
